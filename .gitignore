@@ -1,0 +1,71 @@
+*.o
+*.so
+*.a
+*.vcd
+*.wdb
+*.log
+*.db
+*.dat
+*.shm
+*.fsdb
+
+# Simulation build directories
+obj_dir/
+work/
+sim_build/
+.vcs/
+
+# Compiled outputs
+simv
+simv.daidir/
+csrc/
+vc_hdrs.h
+
+# VCS/Questa artifacts
+.library
+_info
+_primary.vhd
+_primary.v
+transcript
+
+# Verilator artifacts
+Vtb_top*
+Vobj*
+
+# General build/temp
+build/
+.build/
+dist/
+*.pyc
+__pycache__/
+*.swp
+*.swo
+*~
+.DS_Store
+.idea/
+.vscode/
+*.orig
+
+# UVM/Simulation logs
+uvm.log
+questasim.log
+verilator.log
+run.log
+
+# Waveform viewers data
+dump.vcd
+tb_top.vcd
+riscv_core.vcd
+
+# Exclude binaries
+*.exe
+*.bin
+*.elf
+
+# Python venv
+venv/
+env/
+
+# Generated files
+*.jou
+*.pb
