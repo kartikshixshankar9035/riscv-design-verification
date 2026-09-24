@@ -32,10 +32,10 @@ module riscv_datapath (
     // ========================================================================
     // Control Signals from Control Unit
     // ========================================================================
-    input  riscv_pkg::alu_op_e alu_op,
+   input  logic [3:0] alu_op,
     input  logic               alu_src_b,      // Mux control: 0=register, 1=immediate
     input  logic               reg_write_en,
-    input  riscv_pkg::mem_op_e mem_op,
+    input  logic [3:0] mem_op,
     input  logic               mem_read,
     input  logic               mem_write,
     input  logic               is_branch,
