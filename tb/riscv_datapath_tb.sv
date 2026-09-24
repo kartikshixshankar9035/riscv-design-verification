@@ -425,6 +425,58 @@ else
              data_mem[25]);
 
 mem_write = 1'b0;
+// ========================================================
+// TEST 8: LOAD
+// ========================================================
+
+$display("");
+$display("[TEST 8] LOAD");
+
+// x1 = base address
+dut.regfile.regs[1] = 32'd100;
+
+// Preload memory location 100 / 4 = 25
+data_mem[25] = 32'hCAFEBABE;
+
+// LW x5, 0(x1)
+instr_mem[imem_addr[5:2]] = 32'h0000A283;
+
+alu_op       = 4'd0;     // ADD
+alu_src_b    = 1'b1;     // Use immediate
+mem_op       = 4'd2;     // MEM_WORD
+mem_read     = 1'b1;
+mem_write    = 1'b0;
+reg_write_en = 1'b1;
+
+// Allow combinational logic to settle
+#1;
+
+// Check calculated memory address
+if (dmem_addr == 32'd100)
+    $display("[PASS] Load address = 100");
+else
+    $display("[FAIL] Load address expected 100, got %0d", dmem_addr);
+
+// Check memory data
+if (dmem_rdata == 32'hCAFEBABE)
+    $display("[PASS] Load data = CAFEBABE");
+else
+    $display("[FAIL] Load data expected CAFEBABE, got %h",
+             dmem_rdata);
+
+// Perform LOAD
+@(posedge clk);
+#1;
+
+// Check destination register x5
+if (dut.regfile.regs[5] == 32'hCAFEBABE)
+    $display("[PASS] x5 = CAFEBABE");
+else
+    $display("[FAIL] x5 expected CAFEBABE, got %h",
+             dut.regfile.regs[5]);
+
+mem_read    = 1'b0;
+reg_write_en = 1'b0;
         // ========================================================
         // SUMMARY
         // ========================================================
