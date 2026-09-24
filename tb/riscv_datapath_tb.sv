@@ -40,7 +40,7 @@ module riscv_datapath_tb;
     logic [31:0] dmem_rdata;
     logic [3:0]  dmem_we;
 
-    logic [31:0] data_mem [0:15];
+    logic [31:0] data_mem [0:63];
 
     // ============================================================
     // DEBUG
@@ -106,7 +106,7 @@ module riscv_datapath_tb;
     // ============================================================
 
     always @(*) begin
-        dmem_rdata = data_mem[dmem_addr[5:2]];
+        dmem_rdata = data_mem[dmem_addr[7:2]];
     end
 
     // ============================================================
@@ -118,16 +118,16 @@ module riscv_datapath_tb;
         if (mem_write) begin
 
             if (dmem_we[0])
-                data_mem[dmem_addr[5:2]][7:0] <= dmem_wdata[7:0];
+                data_mem[dmem_addr[7:2]][7:0] <= dmem_wdata[7:0];
 
             if (dmem_we[1])
-                data_mem[dmem_addr[5:2]][15:8] <= dmem_wdata[15:8];
+                data_mem[dmem_addr[7:2]][15:8] <= dmem_wdata[15:8];
 
             if (dmem_we[2])
-                data_mem[dmem_addr[5:2]][23:16] <= dmem_wdata[23:16];
+                data_mem[dmem_addr[7:2]][23:16] <= dmem_wdata[23:16];
 
             if (dmem_we[3])
-                data_mem[dmem_addr[5:2]][31:24] <= dmem_wdata[31:24];
+                data_mem[dmem_addr[7:2]][31:24] <= dmem_wdata[31:24];
 
             $display(
                 "[MEM WRITE] ADDR=%h DATA=%h",
@@ -373,37 +373,58 @@ module riscv_datapath_tb;
             );
         end
 
-        // ========================================================
-        // TEST 7: STORE
-        // ========================================================
+// ========================================================
+// TEST 7: STORE
+// ========================================================
 
-        $display("");
-        $display("[TEST 7] STORE");
+$display("");
+$display("[TEST 7] STORE");
 
-        dut.regfile.regs[2] = 32'h12345678;
+// x1 = base address
+// x2 = data to store
+dut.regfile.regs[1] = 32'd100;
+dut.regfile.regs[2] = 32'h12345678;
 
-        alu_op       = 4'd0;
-        alu_src_b    = 1'b1;
-        mem_op       = 4'd2;     // MEM_WORD in package
-        mem_write    = 1'b1;
-        reg_write_en = 1'b0;
+// SW x2, 0(x1)
+instr_mem[0] = 32'h0020A023;
 
-        #2;
+alu_op       = 4'd0;     // ADD
+alu_src_b    = 1'b1;     // Use immediate
+mem_op       = 4'd2;     // MEM_WORD
+mem_write    = 1'b1;
+reg_write_en = 1'b0;
 
-        $display(
-            "STORE ADDR=%h DATA=%h WE=%b",
-            dmem_addr,
-            dmem_wdata,
-            dmem_we
-        );
+// Allow combinational logic to settle
+#1;
 
-        @(posedge clk);
-        #1;
+// Check STORE signals BEFORE clock edge
+if (dmem_addr == 32'd100)
+    $display("[PASS] Store address = 100");
+else
+    $display("[FAIL] Store address expected 100, got %0d", dmem_addr);
 
-        mem_write = 1'b0;
+if (dmem_wdata == 32'h12345678)
+    $display("[PASS] Store data = 12345678");
+else
+    $display("[FAIL] Store data expected 12345678, got %h", dmem_wdata);
 
-        $display("[PASS] Store path executed");
+if (dmem_we == 4'b1111)
+    $display("[PASS] Store write enable = 1111");
+else
+    $display("[FAIL] Store write enable expected 1111, got %b", dmem_we);
 
+// Perform STORE
+@(posedge clk);
+#1;
+
+// Address 100 / 4 = memory index 25
+if (data_mem[25] == 32'h12345678)
+    $display("[PASS] Memory[25] = 12345678");
+else
+    $display("[FAIL] Memory[25] expected 12345678, got %h",
+             data_mem[25]);
+
+mem_write = 1'b0;
         // ========================================================
         // SUMMARY
         // ========================================================
