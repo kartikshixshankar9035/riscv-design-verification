@@ -426,6 +426,7 @@ else
 
 mem_write = 1'b0;
 // ========================================================
+// ========================================================
 // TEST 8: LOAD
 // ========================================================
 
@@ -441,42 +442,358 @@ data_mem[25] = 32'hCAFEBABE;
 // LW x5, 0(x1)
 instr_mem[imem_addr[5:2]] = 32'h0000A283;
 
-alu_op       = 4'd0;     // ADD
-alu_src_b    = 1'b1;     // Use immediate
-mem_op       = 4'd2;     // MEM_WORD
-mem_read     = 1'b1;
-mem_write    = 1'b0;
-reg_write_en = 1'b1;
+alu_op        = 4'd0;
+alu_src_b     = 1'b1;
+mem_op        = 4'd2;
+mem_read      = 1'b1;
+mem_write     = 1'b0;
+reg_write_en  = 1'b1;
 
-// Allow combinational logic to settle
 #1;
 
-// Check calculated memory address
 if (dmem_addr == 32'd100)
     $display("[PASS] Load address = 100");
 else
     $display("[FAIL] Load address expected 100, got %0d", dmem_addr);
 
-// Check memory data
 if (dmem_rdata == 32'hCAFEBABE)
     $display("[PASS] Load data = CAFEBABE");
 else
     $display("[FAIL] Load data expected CAFEBABE, got %h",
              dmem_rdata);
 
-// Perform LOAD
 @(posedge clk);
 #1;
 
-// Check destination register x5
 if (dut.regfile.regs[5] == 32'hCAFEBABE)
     $display("[PASS] x5 = CAFEBABE");
 else
     $display("[FAIL] x5 expected CAFEBABE, got %h",
              dut.regfile.regs[5]);
 
-mem_read    = 1'b0;
+mem_read     = 1'b0;
 reg_write_en = 1'b0;
+
+
+// ========================================================
+// TEST 9: ADDI
+// ========================================================
+
+$display("");
+$display("[TEST 9] ADDI");
+
+// x1 = 100
+dut.regfile.regs[1] = 32'd100;
+
+// ADDI x6, x1, 25
+// 000000011001 00001 000 00110 0010011
+instr_mem[imem_addr[5:2]] = 32'h01908313;
+
+alu_op        = 4'd0;
+alu_src_b     = 1'b1;
+mem_read      = 1'b0;
+mem_write     = 1'b0;
+reg_write_en  = 1'b1;
+
+#1;
+
+if (debug_alu_result == 32'd125)
+    $display("[PASS] ADDI result = 125");
+else
+    $display("[FAIL] ADDI expected 125, got %0d",
+             debug_alu_result);
+
+@(posedge clk);
+#1;
+
+if (dut.regfile.regs[6] == 32'd125)
+    $display("[PASS] x6 = 125");
+else
+    $display("[FAIL] x6 expected 125, got %0d",
+             dut.regfile.regs[6]);
+
+reg_write_en = 1'b0;
+
+
+// ========================================================
+// TEST 10: SLT
+// ========================================================
+
+$display("");
+$display("[TEST 10] SLT");
+
+dut.regfile.regs[1] = 32'd10;
+dut.regfile.regs[2] = 32'd20;
+
+// SLT x7, x1, x2
+instr_mem[imem_addr[5:2]] = 32'h0020A3B3;
+
+alu_op        = 4'd4;
+alu_src_b     = 1'b0;
+mem_read      = 1'b0;
+mem_write     = 1'b0;
+reg_write_en  = 1'b1;
+
+#1;
+
+if (debug_alu_result == 32'd1)
+    $display("[PASS] SLT 10 < 20 = 1");
+else
+    $display("[FAIL] SLT expected 1, got %0d",
+             debug_alu_result);
+
+@(posedge clk);
+#1;
+
+if (dut.regfile.regs[7] == 32'd1)
+    $display("[PASS] x7 = 1");
+else
+    $display("[FAIL] x7 expected 1, got %0d",
+             dut.regfile.regs[7]);
+
+reg_write_en = 1'b0;
+
+
+// ========================================================
+// TEST 11: SLTU
+// ========================================================
+
+$display("");
+$display("[TEST 11] SLTU");
+
+dut.regfile.regs[1] = 32'd10;
+dut.regfile.regs[2] = 32'd20;
+
+// SLTU x8, x1, x2
+instr_mem[imem_addr[5:2]] = 32'h0020B433;
+
+alu_op        = 4'd4;
+alu_src_b     = 1'b0;
+mem_read      = 1'b0;
+mem_write     = 1'b0;
+reg_write_en  = 1'b1;
+
+#1;
+
+if (debug_alu_result == 32'd1)
+    $display("[PASS] SLTU 10 < 20 = 1");
+else
+    $display("[FAIL] SLTU expected 1, got %0d",
+             debug_alu_result);
+
+@(posedge clk);
+#1;
+
+if (dut.regfile.regs[8] == 32'd1)
+    $display("[PASS] x8 = 1");
+else
+    $display("[FAIL] x8 expected 1, got %0d",
+             dut.regfile.regs[8]);
+
+reg_write_en = 1'b0;
+
+
+// ========================================================
+// TEST 12: SLL
+// ========================================================
+
+$display("");
+$display("[TEST 12] SLL");
+
+dut.regfile.regs[1] = 32'd3;
+dut.regfile.regs[2] = 32'd2;
+
+// SLL x9, x1, x2
+instr_mem[imem_addr[5:2]] = 32'h002094B3;
+
+alu_op        = 4'd2;
+alu_src_b     = 1'b0;
+mem_read      = 1'b0;
+mem_write     = 1'b0;
+reg_write_en  = 1'b1;
+
+#1;
+
+if (debug_alu_result == 32'd12)
+    $display("[PASS] SLL 3 << 2 = 12");
+else
+    $display("[FAIL] SLL expected 12, got %0d",
+             debug_alu_result);
+
+@(posedge clk);
+#1;
+
+if (dut.regfile.regs[9] == 32'd12)
+    $display("[PASS] x9 = 12");
+else
+    $display("[FAIL] x9 expected 12, got %0d",
+             dut.regfile.regs[9]);
+
+reg_write_en = 1'b0;
+
+
+// ========================================================
+// TEST 13: SRL
+// ========================================================
+
+$display("");
+$display("[TEST 13] SRL");
+
+dut.regfile.regs[1] = 32'd16;
+dut.regfile.regs[2] = 32'd2;
+
+// SRL x10, x1, x2
+instr_mem[imem_addr[5:2]] = 32'h0020D533;
+
+alu_op        = 4'd6;
+alu_src_b     = 1'b0;
+mem_read      = 1'b0;
+mem_write     = 1'b0;
+reg_write_en  = 1'b1;
+
+#1;
+
+if (debug_alu_result == 32'd4)
+    $display("[PASS] SRL 16 >> 2 = 4");
+else
+    $display("[FAIL] SRL expected 4, got %0d",
+             debug_alu_result);
+
+@(posedge clk);
+#1;
+
+if (dut.regfile.regs[10] == 32'd4)
+    $display("[PASS] x10 = 4");
+else
+    $display("[FAIL] x10 expected 4, got %0d",
+             dut.regfile.regs[10]);
+
+reg_write_en = 1'b0;
+
+
+// ========================================================
+// TEST 14: SRA
+// ========================================================
+
+$display("");
+$display("[TEST 14] SRA");
+
+dut.regfile.regs[1] = 32'hFFFFFFF0;
+dut.regfile.regs[2] = 32'd2;
+
+// SRA x11, x1, x2
+instr_mem[imem_addr[5:2]] = 32'h4020D5B3;
+
+alu_op        = 4'd7;
+alu_src_b     = 1'b0;
+mem_read      = 1'b0;
+mem_write     = 1'b0;
+reg_write_en  = 1'b1;
+
+#1;
+
+if (debug_alu_result == 32'hFFFFFFFC)
+    $display("[PASS] SRA -16 >> 2 = -4");
+else
+    $display("[FAIL] SRA expected FFFFFFFC, got %h",
+             debug_alu_result);
+
+@(posedge clk);
+#1;
+
+if (dut.regfile.regs[11] == 32'hFFFFFFFC)
+    $display("[PASS] x11 = FFFFFFFC");
+else
+    $display("[FAIL] x11 expected FFFFFFFC, got %h",
+             dut.regfile.regs[11]);
+
+reg_write_en = 1'b0;
+
+
+// ========================================================
+// TEST 15: LUI
+// ========================================================
+
+$display("");
+$display("[TEST 15] LUI");
+
+// LUI x12, 0x12345
+// Expected x12 = 0x12345000
+instr_mem[imem_addr[5:2]] = 32'h12345637;
+
+alu_op        = 4'd10;
+alu_src_b     = 1'b1;
+mem_read      = 1'b0;
+mem_write     = 1'b0;
+reg_write_en  = 1'b1;
+
+#1;
+
+if (debug_alu_result == 32'h12345000)
+    $display("[PASS] LUI result = 12345000");
+else
+    $display("[FAIL] LUI expected 12345000, got %h",
+             debug_alu_result);
+
+@(posedge clk);
+#1;
+
+if (dut.regfile.regs[12] == 32'h12345000)
+    $display("[PASS] x12 = 12345000");
+else
+    $display("[FAIL] x12 expected 12345000, got %h",
+             dut.regfile.regs[12]);
+
+reg_write_en = 1'b0;
+
+
+// ========================================================
+// TEST 16: AUIPC - CURRENT RTL LIMITATION
+// ========================================================
+
+$display("");
+$display("[TEST 16] AUIPC");
+
+$display("[INFO] AUIPC requires PC + upper immediate.");
+$display("[INFO] Current datapath uses rs1 as ALU operand A.");
+$display("[INFO] AUIPC requires a datapath modification.");
+$display("[INFO] Test deferred until PC/ALU control is upgraded.");
+
+
+// ========================================================
+// TEST 17: BRANCH - CURRENT RTL LIMITATION
+// ========================================================
+
+$display("");
+$display("[TEST 17] BRANCH");
+
+$display("[INFO] Branch requires conditional next-PC logic.");
+$display("[INFO] Current RTL uses next_pc = pc + 4.");
+$display("[INFO] Branch verification deferred.");
+
+
+// ========================================================
+// TEST 18: JAL - CURRENT RTL LIMITATION
+// ========================================================
+
+$display("");
+$display("[TEST 18] JAL");
+
+$display("[INFO] JAL write-back PC+4 exists.");
+$display("[INFO] PC redirection is not implemented.");
+$display("[INFO] JAL verification deferred.");
+
+
+// ========================================================
+// TEST 19: JALR - CURRENT RTL LIMITATION
+// ========================================================
+
+$display("");
+$display("[TEST 19] JALR");
+
+$display("[INFO] JALR write-back PC+4 exists.");
+$display("[INFO] PC redirection is not implemented.");
+$display("[INFO] JALR verification deferred.");
         // ========================================================
         // SUMMARY
         // ========================================================
